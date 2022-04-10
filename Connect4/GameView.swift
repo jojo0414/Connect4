@@ -15,11 +15,12 @@ struct GameView: View {
     @State private var showWinAlert = false
     @State private var showDrawAlert = false
     @Binding var playerData: [PlayerData]
+    var gameMode: Int
     
     var body: some View {
 //        NavigationView{
             ZStack{
-                ChessBoardView(showWinAlert: $showWinAlert, showDrawAlert: $showDrawAlert, nowPlayingIndex: $nowPlayingIndex, playerData: $playerData, circles: $circles)
+                ChessBoardView(showWinAlert: $showWinAlert, showDrawAlert: $showDrawAlert, nowPlayingIndex: $nowPlayingIndex, playerData: $playerData, circles: $circles, gameMode: gameMode)
                     .offset(x: 0, y: -70)
                 PlayerView(nowPlayingIndex: $nowPlayingIndex, playerData: $playerData)
                     .offset(x: 0, y: 150)
@@ -139,6 +140,7 @@ struct ChessBoardView: View {
     @Binding var nowPlayingIndex: Int
     @Binding var playerData: [PlayerData]
     @Binding var circles: [CircleType]
+    var gameMode: Int
     
     var body: some View {
         VStack {
@@ -174,6 +176,33 @@ struct ChessBoardView: View {
                                 showWinAlert = true
                             }
                             nowPlayingIndex = (nowPlayingIndex + 1) % 2
+                            if gameMode == 1
+                            {
+                                var computerPlaceIndex = Int.random(in: 0...6)
+                                while emptyIndex[computerPlaceIndex] < 0
+                                {
+                                    computerPlaceIndex = Int.random(in: 0...6)
+                                }
+                                circles[emptyIndex[computerPlaceIndex]].ownerIndex = nowPlayingIndex
+                                circles[emptyIndex[computerPlaceIndex]].color = playerData[nowPlayingIndex].color
+                                playerData[nowPlayingIndex].useChess += 1
+                                playerData[nowPlayingIndex].ownPlaceIndex[emptyIndex[computerPlaceIndex]] = true
+                                emptyIndex[computerPlaceIndex] -= 7
+                                if nowPlayingIndex == 1 && playerData[nowPlayingIndex].useChess == 21
+                                {
+                                    showDrawAlert = true
+                                }
+                                let lineChess = checkWin(ownPlaceIndex: playerData[nowPlayingIndex].ownPlaceIndex)
+                                if lineChess[0] != -1
+                                {
+                                    for i in lineChess
+                                    {
+                                        circles[i].color = Color.black
+                                    }
+                                    showWinAlert = true
+                                }
+                                nowPlayingIndex = (nowPlayingIndex + 1) % 2
+                            }
                         }
                     }
                 }
@@ -271,9 +300,9 @@ struct CircleView: View {
     @Binding var circles: [CircleType]
     let index: Int
     var body: some View {
-        Circle()
-            .aspectRatio(4/3 ,contentMode: .fit)
-            .foregroundColor(circles[index].color)
+            Circle()
+                .aspectRatio(4/3 ,contentMode: .fit)
+                .foregroundColor(circles[index].color)
     }
 }
 
